@@ -15,6 +15,7 @@ st.write("Information")
 data.info()
 
 st.write("Description")
+st.write("We need to determine is there any unknow information on the Distrinct name data.")
 st.write(data['Number'].describe())
 
 st.write("Figure")
@@ -128,6 +129,14 @@ data_load_state.text('Loading data...done!')
 
 data_load_state = st.text('Loading data...')
 sns.lmplot(x="unemployment_ratio", y="births_ratio", data=data)
+plt.show()
+st.pyplot()
+data_load_state.text('Loading data...done!')
+
+
+data_load_state = st.text('Loading data...')
+f,ax = plt.subplots(figsize=(5, 5))
+sns.heatmap(data.corr(), annot=True,ax=ax)
 plt.show()
 st.pyplot()
 data_load_state.text('Loading data...done!')
