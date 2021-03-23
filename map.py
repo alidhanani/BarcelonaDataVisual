@@ -51,7 +51,7 @@
 
 import altair as alt
 import streamlit as st
-from vega_datasets import data
+# from vega_datasets import data
 #https://stackoverflow.com/questions/56396452/how-to-create-a-topojson-geomap-using-altair-library-for-python
 #https://github.com/martgnz/bcn-geodata
 

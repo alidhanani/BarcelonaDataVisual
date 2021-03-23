@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import altair as alt
-from vega_datasets import data
+# from vega_datasets import data
 # st.set_option('deprecation.showPyplotGlobalUse', False)
 # add_selectbox = st.sidebar.selectbox(
 #     'How would you like to be contacted?',
