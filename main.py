@@ -17,14 +17,22 @@ from streamlit_folium import folium_static
 # All dataframes begin with "df" for ease in autocomplete (CTRL + Space)
 df_unemployment = pd.read_csv('./archive/unemployment.csv')
 df_population = pd.read_csv('./archive/population.csv')
+df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
+df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
+df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex_excel.csv')
 df_geo = pd.read_csv("barcelona_geo.csv")
 
 # Hard coded names and dataframe names for categories
 category_dict = {
     "Population" : df_population,
-    "Unemployment": df_unemployment
+    "Unemployment": df_unemployment,
+    "Immigrants By Nationality": df_immigrants_by_nationality,
+    "Immigrants Emigrants By Age": df_immigrants_emigrants_by_age,
+    "Immigrants Emigrants By Sex": df_immigrants_emigrants_by_sex
 }
 
+st.table(df_immigrants_emigrants_by_sex.head())
+st.table(df_unemployment.head())
 #Get values for user selection
 categories = list(category_dict.keys())
 districts = df_population["District.Name"].unique()
@@ -145,9 +153,9 @@ st.sidebar.header('Comparing')
 df = get_data()
 min_year = int(df['Year'].min()) 
 max_year = int(df['Year'].max()) 
-district_names = df['District Name'].unique()
+district_names = df['District.Name'].unique()
 #selected_year = st.sidebar.slider('Year', min_year, max_year)
-neighborhood_names = df['Neighborhood Name'].unique()
+neighborhood_names = df['Neighborhood.Name'].unique()
 # selected_district_1 = st.sidebar.selectbox('District Name 1', district_names)
 # selected_district_2 = st.sidebar.selectbox('District Name 2', district_names)
 
@@ -156,11 +164,11 @@ all_dist = []
 if num_dist == "":
     num_dist = "0"
 for i in range(0, int(num_dist)):
-	all_dist.append(st.sidebar.selectbox('District Name '+str(i), district_names))
+	all_dist.append(st.sidebar.selectbox('District.Name '+str(i), district_names))
 
 dataframes = []
 for i in all_dist:
-	df4 = df[(df['District Name'] == i) 
+	df4 = df[(df['District.Name'] == i) 
         & (df['Year'] == select_year)]
        # & (df['Neighborhood Name'] == selected_neighborhood)]
 	df4 = df4.groupby(df4["Gender"])["Number"].sum()
