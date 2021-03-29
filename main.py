@@ -19,7 +19,7 @@ df_unemployment = pd.read_csv('./archive/unemployment.csv')
 df_population = pd.read_csv('./archive/population.csv')
 df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
 df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
-df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex_excel.csv')
+df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
 df_geo = pd.read_csv("barcelona_geo.csv")
 
 # Hard coded names and dataframe names for categories
