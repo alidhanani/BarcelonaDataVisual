@@ -25,6 +25,7 @@ year_min = int(df_population.Year.min())
 year_max = int(df_population.Year.max())
 gender = df_population["Gender"].unique()
 
+
 #Generate Sidebar for user selection.
 #All variables start with "select" for ease in autocomplete
 select_category = st.sidebar.selectbox("Category", categories)
