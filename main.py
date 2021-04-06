@@ -1,3 +1,4 @@
+###################################################
 #How do we divide data into different files so that we can each work independently?
 #Data in different in files has different column names.(District Name vs District.Name). WTF?!?
 #https://towardsdatascience.com/how-to-build-interactive-dashboards-in-python-using-streamlit-1198d4f7061b
@@ -11,6 +12,9 @@ import requests # library to handle requests
 import numpy as np
 import folium # map rendering library
 from streamlit_folium import folium_static
+
+
+
 
 # I was thinking it would be good for performance to read 
 # all files at the start(What do you guys think?).
@@ -27,50 +31,76 @@ category_dict = {
     "Population" : df_population,
     "Unemployment": df_unemployment,
     "Immigrants By Nationality": df_immigrants_by_nationality,
-    "Immigrants Emigrants By Age": df_immigrants_emigrants_by_age,
-    "Immigrants Emigrants By Sex": df_immigrants_emigrants_by_sex
+    "Immigrants By Age": df_immigrants_emigrants_by_age,
+    "Immigrants By Sex": df_immigrants_emigrants_by_sex
 }
 
-st.table(df_immigrants_emigrants_by_sex.head())
-st.table(df_unemployment.head())
-#Get values for user selection
+
 categories = list(category_dict.keys())
 districts = df_population["District.Name"].unique()
 year_min = int(df_population.Year.min())
 year_max = int(df_population.Year.max())
 gender = df_population["Gender"].unique()
+nationalities = np.sort(df_immigrants_by_nationality["Nationality"].unique())
+age = np.sort(df_immigrants_emigrants_by_age['Age'].unique())
+
 
 #Generate Sidebar for user selection.
 #All variables start with "select" for ease in autocomplete
 select_category = st.sidebar.selectbox("Category", categories)
 select_year = st.sidebar.slider("Year", min_value= year_min, max_value= year_max)
-select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
-# st.sidebar.write("This is disabled")
-# select_district = st.sidebar.selectbox("District", districts)
-
-#Data Slicing
-#Note that Categories is not included any condition for now,
-# will probably make a switch case for that to show the correct dataframe
-#For multiple conditions in df slice, always use () for each condition
 selected_dataframe = category_dict.get(select_category)
-# st.write("The selected dataset is: " + str(select_category))
-if  select_gender == "Both":
-    selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
-else:
-    # st.write(select_gender)
+
+
+if select_category == "Population":
+    select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
+    select_age = st.sidebar.selectbox("Age", age)
+
+    if  select_gender == "Both":
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
+        & (selected_dataframe['Age'] == select_age)]
+    else:
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
+        & (selected_dataframe['Gender'] == select_gender)
+        & (selected_dataframe['Age'] == select_age)]
+
+    
+
+elif select_category == "Unemployment":
+    select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
+
+    if  select_gender == "Both":
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
+    else:
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
+        & (selected_dataframe['Gender'] == select_gender)]
+
+elif select_category == "Immigrants By Nationality":
+    select_nationality = st.sidebar.selectbox("Nationality", nationalities)
+
     selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
-    & (selected_dataframe['Gender'] == select_gender)]
+        & (selected_dataframe['Nationality'] == select_nationality)]
+    
+elif select_category == "Immigrants By Age":
+    select_age = st.sidebar.selectbox("Age", age)
+
+    selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
+        & (selected_dataframe['Age'] == select_age)]
 
 
-# st.table(selected_data.head())
+elif select_category == "Immigrants By Sex":
+    select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
 
-# st.write("This is the concatenated dataframe")
+    if  select_gender == "Both":
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
+    else:
+        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
+        & (selected_dataframe['Gender'] == select_gender)]
+
 summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index()
-
 df_map = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
-# st.write(df_map.shape)
-# st.write("This is the merged Dataframe")
-# st.table(df_map.head())
+df_map = df_map.fillna(0)
+###################################################
 
 
 data_all = df_map
