@@ -8,4 +8,8 @@ District.Code,District.Name,Latitude,Longitude
 7,Horta-Guinardó,41.413056,2.166389
 8,Nou Barris,41.441389,2.171944
 9,Sant Andreu,41.436111,2.191111
+<<<<<<< HEAD
 10,Sant Martí,41.417864,2.198681
+=======
+10,Sant Martí,41.417864,2.198681
+>>>>>>> a9de98cc21935f9e34acb4c8bf6aad59128d7d73
