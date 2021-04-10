@@ -178,16 +178,16 @@ def get_data():
     return pd.read_csv('./archive/unemployment.csv')
 
 
+###########################################################
+## Compare Work
+###########################################################
 
 st.sidebar.header('Comparing')
 df = get_data()
 min_year = int(df['Year'].min()) 
 max_year = int(df['Year'].max()) 
 district_names = df['District.Name'].unique()
-#selected_year = st.sidebar.slider('Year', min_year, max_year)
 neighborhood_names = df['Neighborhood.Name'].unique()
-# selected_district_1 = st.sidebar.selectbox('District Name 1', district_names)
-# selected_district_2 = st.sidebar.selectbox('District Name 2', district_names)
 
 num_dist = st.sidebar.text_input('Number of district')
 all_dist = [] 
@@ -201,16 +201,13 @@ for i in all_dist:
 	df4 = df[(df['District.Name'] == i) 
         & (df['Year'] == select_year)]
        # & (df['Neighborhood Name'] == selected_neighborhood)]
-	df4 = df4.groupby(df4["Gender"])["Number"].sum()
+	df4 = df4.groupby(df4["Gender"].rename("Gender"))["Number"].sum().rename(i)
 	dataframes.append(df4)
+ 
 
-newData = []
-for i in range(len(dataframes)-1):
-	newData.append(pd.merge(dataframes[i], dataframes[i+1], on='Gender'))
-
-
-for i in newData:
-	df6 = i.T
-	df6.plot.bar(rot=15, title="Compare unemployment")
-	plt.show(block=True)
-	st.pyplot()
+if(len(dataframes) > 0):
+    newDF = pd.concat(dataframes, axis=1)
+    df6 = newDF.T
+    df6.plot.bar(rot=15, title="Compare unemployment")
+    plt.show(block=True)
+    st.pyplot()
