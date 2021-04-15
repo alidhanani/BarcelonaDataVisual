@@ -12,6 +12,7 @@ import requests # library to handle requests
 import numpy as np
 import folium # map rendering library
 from streamlit_folium import folium_static
+from plotly.subplots import make_subplots
 
 
 
@@ -177,6 +178,12 @@ show_maps(select_data, threshold(select_data))
 def get_data():
     return pd.read_csv('./archive/unemployment.csv')
 
+def get_data_population():
+    return pd.read_csv('./archive/population.csv')
+
+def get_data_Nationality():
+    return pd.read_csv('./archive/immigrants_by_nationality.csv')
+
 
 ###########################################################
 ## Compare Work
@@ -184,6 +191,8 @@ def get_data():
 
 st.sidebar.header('Comparing')
 df = get_data()
+df_population = get_data_population()
+df_nationality = get_data_Nationality()
 min_year = int(df['Year'].min()) 
 max_year = int(df['Year'].max()) 
 district_names = df['District.Name'].unique()
@@ -203,11 +212,44 @@ for i in all_dist:
        # & (df['Neighborhood Name'] == selected_neighborhood)]
 	df4 = df4.groupby(df4["Gender"].rename("Gender"))["Number"].sum().rename(i)
 	dataframes.append(df4)
- 
+
 
 if(len(dataframes) > 0):
     newDF = pd.concat(dataframes, axis=1)
     df6 = newDF.T
-    df6.plot.bar(rot=15, title="Compare unemployment")
+    df6.plot.bar(rot=15, title="Compare unemployment by gender")
     plt.show(block=True)
     st.pyplot()
+
+dataframes_population = []
+for i in all_dist:
+    dfpop = df_population[(df_population['District.Name'] == i) 
+        & (df_population['Year'] == select_year)]
+       # & (df['Neighborhood Name'] == selected_neighborhood)]
+    dfpop = dfpop.groupby(dfpop["Age"].rename("Age"))["Number"].sum().rename(i)
+    dataframes_population.append(dfpop)
+
+if(len(dataframes_population) > 0):
+    newDFPop = pd.concat(dataframes_population, axis=1)
+    df6_pop = newDFPop.T
+    df6_pop.plot.bar(rot=15, title="Compare Population By Ages")
+    plt.show(block=True)
+    st.pyplot()
+
+
+dataframes_nationality = []
+for i in all_dist:
+    dfnational = df_nationality[(df_nationality['District.Name'] == i) 
+        & (df_nationality['Year'] == select_year)]
+       # & (df['Neighborhood Name'] == selected_neighborhood)]
+    dfnational = dfnational.groupby(dfnational["Nationality"].rename("Nationality"))["Number"].sum().rename(i)
+    dataframes_nationality.append(dfnational)
+
+if(len(dataframes_nationality) > 0):
+    newDFNat = pd.concat(dataframes_nationality, axis=1)
+    df6_nat = newDFNat.T
+    df6_nat.plot.bar(rot=15, title="Compare Immigation by Nationality")
+    plt.show(block=True)
+    st.pyplot()
+
+
