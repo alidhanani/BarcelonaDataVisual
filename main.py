@@ -175,17 +175,6 @@ for idx in range(10):
 
 show_maps(select_data, threshold(select_data))
 
-
-def get_data():
-    return pd.read_csv('./archive/unemployment.csv')
-
-def get_data_population():
-    return pd.read_csv('./archive/population.csv')
-
-def get_data_Nationality():
-    return pd.read_csv('./archive/immigrants_by_nationality.csv')
-
-
 ###########################################################
 ## Compare Work
 ###########################################################
