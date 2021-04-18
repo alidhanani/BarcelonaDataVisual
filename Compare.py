@@ -27,13 +27,13 @@ class Compare:
             df4 = df4.groupby(df4[cate].rename(cate))["Number"].sum().rename(i)
             self.dataframes.append(df4)
             
-    def showMap(self, titleShow):      
+    def showFigure(self, titleShow, col):      
         if(len(self.dataframes) > 0):
             newDF = pd.concat(self.dataframes, axis=1)
             df6 = newDF.T
             df6.plot.bar(rot=15, title=titleShow)
             plt.show(block=True)
-            st.pyplot()
+            col.pyplot()
             
 class DesignSideBarText:
     

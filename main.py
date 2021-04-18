@@ -5,6 +5,7 @@
 
 import streamlit as st
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import json # library to handle JSON files
 from geopy.geocoders import Nominatim # convert an address into latitude and longitude values
@@ -13,10 +14,20 @@ import numpy as np
 import folium # map rendering library
 from streamlit_folium import folium_static
 from plotly.subplots import make_subplots
+import time
 from Compare import Compare, DesignSideBarText
 
 
 
+st.set_page_config(layout="wide", page_title='Barcelona Data')
+LoadData = st.title("Barcelona Data Load")
+my_bar = st.progress(0)
+for i in range(100):
+    my_bar.progress(i + 1)
+    time.sleep(0.01)
+
+my_bar.empty()  # Remove the progress bar
+LoadData.title("")
 
 # I was thinking it would be good for performance to read 
 # all files at the start(What do you guys think?).
@@ -32,9 +43,9 @@ df_geo = pd.read_csv("barcelona_geo.csv")
 category_dict = {
     "Population" : df_population,
     "Unemployment": df_unemployment,
-    "Immigrants By Nationality": df_immigrants_by_nationality,
-    "Immigrants By Age": df_immigrants_emigrants_by_age,
-    "Immigrants By Sex": df_immigrants_emigrants_by_sex
+    "Immigrants By Nationality": df_immigrants_by_nationality
+    # "Immigrants By Age": df_immigrants_emigrants_by_age,
+    # "Immigrants By Sex": df_immigrants_emigrants_by_sex
 }
 
 
@@ -65,6 +76,10 @@ if select_category == "Population":
         selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
         & (selected_dataframe['Gender'] == select_gender)
         & (selected_dataframe['Age'] == select_age)]
+    
+    year_data = df_unemployment.groupby(['Year'])['Number'].sum()
+    age_data = df_population.groupby(['Age'])['Number'].sum()
+    gender_data = df_unemployment.groupby(['District.Name'])['Number'].sum()
 
     
 
@@ -82,6 +97,9 @@ elif select_category == "Immigrants By Nationality":
 
     selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
         & (selected_dataframe['Nationality'] == select_nationality)]
+    year_data = df_immigrants_by_nationality.groupby(['Year'])['Number'].sum()
+    age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
+    gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
     
 elif select_category == "Immigrants By Age":
     select_age = st.sidebar.selectbox("Age", age)
@@ -107,7 +125,7 @@ df_map = df_map.fillna(0)
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
-
+map1, map2, map3 = st.beta_columns(3)
 def center():
     address = 'Barcelona, Spain'
     geolocator = Nominatim(user_agent="id_explorer")
@@ -133,7 +151,7 @@ def show_maps(data, threshold_scale):
         threshold_scale=threshold_scale,
         fill_color='YlOrRd', 
         fill_opacity=0.7, 
-        line_opacity=0.2,
+        line_opacity=0.5,
         legend_name=dicts[data],
         highlight=True,
         reset=True).add_to(map_sby)
@@ -142,25 +160,22 @@ def show_maps(data, threshold_scale):
     maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri',data],
                                                         aliases=['District.Name: ', dicts[data]],
                                                         labels=True))                                                       
-    folium_static(map_sby)
+    with map2:
+        folium_static(map_sby)
 
 centers = center()
 
-select_maps = st.sidebar.selectbox(
-    "What data do you want to see?",
-    ("OpenStreetMap", "Stamen Terrain","Stamen Toner")
-)
 select_data = st.sidebar.radio(
     "What data do you want to see?",
     ("Total_Pop",)
 )
 
-map_sby = folium.Map(tiles=select_maps, location=[centers[0], centers[1]], zoom_start=12)
-st.title('Map of Barca')
+map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
+
+#map2.markdown("<h1 style='text-align: center; color: red;'>Barcelona</h1>", unsafe_allow_html=True)
 
 data_all['District.Name'] = data_all['District.Name'].str.title()
-# data_all = data_all.replace({'District':'Pabean Cantikan'},'Pabean Cantian')
-# data_all = data_all.replace({'District':'Karangpilang'},'Karang Pilang')
+
 
 dicts = {
     "Total_Pop":'Number',
@@ -168,12 +183,31 @@ dicts = {
 
 for idx in range(10):
     data_geo['features'][idx]['properties']['Total_Pop'] = int(data_all['Number'][idx])
-    # data_geo['features'][idx]['properties']['Total_Pop'] = int(data_all['Total Population'][idx])
-    # data_geo['features'][idx]['properties']['Male_Pop'] = int(data_all['Male Population'][idx])
-    # data_geo['features'][idx]['properties']['Female_Pop'] = int(data_all['Female Population'][idx])
-    # data_geo['features'][idx]['properties']['Area_Region'] = float(data_all['Areas Region(km squared)'][idx])
+
 
 show_maps(select_data, threshold(select_data))
+
+###########################################################
+## Show Home Map
+###########################################################
+col1, col2, col3 = st.beta_columns(3)
+# year_data = df_immigrants_by_nationality.groupby(['Year'])['Number'].sum()
+# age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
+# gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
+
+year_data.plot.bar(rot=15, title='Nationality', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+plt.show(block=True)
+col1.pyplot()
+
+gender_data.plot.bar(rot=15, title='District', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+plt.xticks(rotation=90)
+plt.show(block=True)
+col3.pyplot()
+
+age_data.plot.bar(rot=15, title='Age', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+plt.xticks(rotation=90)
+plt.show(block=True)
+col2.pyplot()
 
 ###########################################################
 ## Compare Work
@@ -181,14 +215,29 @@ show_maps(select_data, threshold(select_data))
 
 st.sidebar.header('Comparing')
 
+col1, col2, col3 = st.beta_columns(3)
 making_textbox = DesignSideBarText()
 all_dist = making_textbox.making_textbox()
 
+st.set_option('deprecation.showPyplotGlobalUse', False)
 unemploy = Compare('./archive/unemployment.csv')
 unemploy.makeDataframe(all_dist, select_year, 'Gender')
-unemploy.showMap('Unemploy')
+unemploy.showFigure('Unemploy', col1)
 
+st.set_option('deprecation.showPyplotGlobalUse', False)
+unemploy = Compare('./archive/unemployment.csv')
+unemploy.makeDataframe(all_dist, select_year, 'Gender')
+unemploy.showFigure('Unemploy', col2)
 
-unemploy = Compare('./archive/population.csv')
-unemploy.makeDataframe(all_dist, select_year, 'Age')
-unemploy.showMap('Unemploy')
+st.set_option('deprecation.showPyplotGlobalUse', False)
+unemploy = Compare('./archive/unemployment.csv')
+unemploy.makeDataframe(all_dist, select_year, 'Gender')
+unemploy.showFigure('Unemploy', col3)
+
+# population = Compare('./archive/population.csv')
+# population.makeDataframe(all_dist, select_year, 'Age')
+# population.showFigure('Population',col2)
+
+# immigration = Compare('./archive/immigrants_by_nationality.csv')
+# immigration.makeDataframe(all_dist, select_year, 'Nationality')
+# immigration.showFigure('Nationality',col3)
