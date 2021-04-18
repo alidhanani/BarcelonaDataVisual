@@ -44,12 +44,12 @@ class DesignSideBarText:
         return pd.read_csv('./archive/unemployment.csv')
 
     def making_textbox(self):
-        num_dist = st.sidebar.text_input('Number of district')
+        num_dist = st.sidebar.text_input('Number of district(Max 9)', value="2", max_chars=1)
         df = self.get_data()
         district_names = df['District.Name'].unique()
         all_dist = [] 
         if num_dist == "":
-            num_dist = "0"
+            num_dist = "2"
         for i in range(0, int(num_dist)):
             all_dist.append(st.sidebar.selectbox('District.Name '+str(i), district_names))
         return all_dist

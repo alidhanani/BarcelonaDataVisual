@@ -18,7 +18,6 @@ import time
 from Compare import Compare, DesignSideBarText
 
 
-
 st.set_page_config(layout="wide", page_title='Barcelona Data')
 LoadData = st.title("Barcelona Data Load")
 my_bar = st.progress(0)
@@ -42,7 +41,7 @@ df_geo = pd.read_csv("barcelona_geo.csv")
 # Hard coded names and dataframe names for categories
 category_dict = {
     "Population" : df_population,
-    "Unemployment": df_unemployment,
+    #"Unemployment": df_unemployment,
     "Immigrants By Nationality": df_immigrants_by_nationality
     # "Immigrants By Age": df_immigrants_emigrants_by_age,
     # "Immigrants By Sex": df_immigrants_emigrants_by_sex
@@ -61,11 +60,13 @@ age = np.sort(df_immigrants_emigrants_by_age['Age'].unique())
 #Generate Sidebar for user selection.
 #All variables start with "select" for ease in autocomplete
 select_category = st.sidebar.selectbox("Category", categories)
-select_year = st.sidebar.slider("Year", min_value= year_min, max_value= year_max)
 selected_dataframe = category_dict.get(select_category)
 
 
 if select_category == "Population":
+    select_year = st.sidebar.slider("Year", 
+                                min_value= int(df_population.Year.min()), 
+                                max_value= int(df_population.Year.max()))
     select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
     select_age = st.sidebar.selectbox("Age", age)
 
@@ -81,18 +82,11 @@ if select_category == "Population":
     age_data = df_population.groupby(['Age'])['Number'].sum()
     gender_data = df_unemployment.groupby(['District.Name'])['Number'].sum()
 
-    
-
-elif select_category == "Unemployment":
-    select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
-
-    if  select_gender == "Both":
-        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
-    else:
-        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
-        & (selected_dataframe['Gender'] == select_gender)]
 
 elif select_category == "Immigrants By Nationality":
+    select_year = st.sidebar.slider("Year", 
+                                min_value= int(df_immigrants_by_nationality.Year.min()), 
+                                max_value= int(df_immigrants_by_nationality.Year.max()))
     select_nationality = st.sidebar.selectbox("Nationality", nationalities)
 
     selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
@@ -101,27 +95,12 @@ elif select_category == "Immigrants By Nationality":
     age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
     gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
     
-elif select_category == "Immigrants By Age":
-    select_age = st.sidebar.selectbox("Age", age)
-
-    selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
-        & (selected_dataframe['Age'] == select_age)]
-
-
-elif select_category == "Immigrants By Sex":
-    select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
-
-    if  select_gender == "Both":
-        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
-    else:
-        selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)
-        & (selected_dataframe['Gender'] == select_gender)]
 
 summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index()
 df_map = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
 df_map = df_map.fillna(0)
 ###################################################
-
+isCompare = st.sidebar.checkbox("Compare Mode")
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
@@ -160,15 +139,13 @@ def show_maps(data, threshold_scale):
     maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri',data],
                                                         aliases=['District.Name: ', dicts[data]],
                                                         labels=True))                                                       
-    with map2:
-        folium_static(map_sby)
+    if isCompare is False:
+        with map2:
+            folium_static(map_sby)
 
 centers = center()
 
-select_data = st.sidebar.radio(
-    "What data do you want to see?",
-    ("Total_Pop",)
-)
+select_data = "Total_Pop"
 
 map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
 
@@ -190,49 +167,61 @@ show_maps(select_data, threshold(select_data))
 ###########################################################
 ## Show Home Map
 ###########################################################
-col1, col2, col3 = st.beta_columns(3)
-# year_data = df_immigrants_by_nationality.groupby(['Year'])['Number'].sum()
-# age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
-# gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
+if isCompare is False:
+    col1, col2, col3 = st.beta_columns(3)
+    # year_data = df_immigrants_by_nationality.groupby(['Year'])['Number'].sum()
+    # age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
+    # gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
 
-year_data.plot.bar(rot=15, title='Nationality', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-plt.show(block=True)
-col1.pyplot()
+    year_data.plot.bar(rot=15, title='Nationality', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+    plt.show(block=True)
+    col1.pyplot()
 
-gender_data.plot.bar(rot=15, title='District', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-plt.xticks(rotation=90)
-plt.show(block=True)
-col3.pyplot()
+    gender_data.plot.bar(rot=15, title='District', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+    plt.xticks(rotation=90)
+    plt.show(block=True)
+    col3.pyplot()
 
-age_data.plot.bar(rot=15, title='Age', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-plt.xticks(rotation=90)
-plt.show(block=True)
-col2.pyplot()
+    age_data.plot.bar(rot=15, title='Age', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+    plt.xticks(rotation=90)
+    plt.show(block=True)
+    col2.pyplot()
+
 
 ###########################################################
 ## Compare Work
 ###########################################################
 
-st.sidebar.header('Comparing')
+if isCompare is True:
+    st.sidebar.header('Comparing')
 
-col1, col2, col3 = st.beta_columns(3)
-making_textbox = DesignSideBarText()
-all_dist = making_textbox.making_textbox()
+    col1, col2, col3 = st.beta_columns(3)
+    making_textbox = DesignSideBarText()
+    all_dist = making_textbox.making_textbox()
 
-st.set_option('deprecation.showPyplotGlobalUse', False)
-unemploy = Compare('./archive/unemployment.csv')
-unemploy.makeDataframe(all_dist, select_year, 'Gender')
-unemploy.showFigure('Unemploy', col1)
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    unemployGender = Compare('./archive/unemployment.csv')
+    unemployGender.makeDataframe(all_dist, select_year, 'Gender')
+    unemployGender.showFigure('Unemployment By Gender', col1)
 
-st.set_option('deprecation.showPyplotGlobalUse', False)
-unemploy = Compare('./archive/unemployment.csv')
-unemploy.makeDataframe(all_dist, select_year, 'Gender')
-unemploy.showFigure('Unemploy', col2)
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    unemployDistrict = Compare('./archive/unemployment.csv')
+    unemployDistrict.makeDataframe(all_dist, select_year, 'District.Name')
+    unemployDistrict.showFigure('Unemployment By District Name', col2)
 
-st.set_option('deprecation.showPyplotGlobalUse', False)
-unemploy = Compare('./archive/unemployment.csv')
-unemploy.makeDataframe(all_dist, select_year, 'Gender')
-unemploy.showFigure('Unemploy', col3)
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    populationNeighbor = Compare('./archive/population.csv')
+    populationNeighbor.makeDataframe(all_dist, select_year, 'Neighborhood.Name')
+    populationNeighbor.showFigure('Population By Gender', col3)
+    
+    colNext1, colNext2 = st.beta_columns(2)
+    populationAge = Compare('./archive/immigrants_emigrants_by_age.csv')
+    populationAge.makeDataframe(all_dist, select_year, 'Age')
+    populationAge.showFigure('Population By Gender', colNext1)
+    
+    populationSex = Compare('./archive/immigrants_emigrants_by_sex.csv')
+    populationSex.makeDataframe(all_dist, select_year, 'Gender')
+    populationSex.showFigure('Population By Gender', colNext2)
 
 # population = Compare('./archive/population.csv')
 # population.makeDataframe(all_dist, select_year, 'Age')
