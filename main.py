@@ -250,6 +250,12 @@ if isCompare is False:
                         hover_name="Nationality", log_x=True, size_max=100)
         fig.update_xaxes(range=[2, 4])
         st.plotly_chart(fig, use_container_width= True)
+        
+        df_unemployment_sum = df_unemployment.groupby(['District.Name','Year'])['Number'].sum().reset_index()
+        df_unemployment_sum.columns = ["District.Name","Year","Number"]
+        fig = px.line(df_unemployment_sum, x="Year", y="Number", color="District.Name",
+                    hover_name="Number")
+        st.plotly_chart(fig, use_container_width= True)
 
 ###########################################################
 ## Compare Work
