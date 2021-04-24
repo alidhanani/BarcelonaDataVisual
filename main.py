@@ -16,18 +16,19 @@ from streamlit_folium import folium_static
 from plotly.subplots import make_subplots
 import time
 from Compare import Compare, DesignSideBarText
-
+import plotly.express as px
 
 st.set_page_config(layout="wide", page_title='Barcelona Data')
-LoadData = st.title("Barcelona Data Load")
-my_bar = st.progress(0)
-for i in range(100):
-    my_bar.progress(i + 1)
-    time.sleep(0.01)
 
-my_bar.empty()  # Remove the progress bar
-LoadData.title("")
+@st.cache(suppress_st_warning=True)
+def makingProgressBar():
+    my_bar = st.progress(0)
+    for i in range(100):
+        my_bar.progress(i + 1)
+        time.sleep(0.01)
+    my_bar.empty()  # Remove the progress bar
 
+makingProgressBar()
 # I was thinking it would be good for performance to read 
 # all files at the start(What do you guys think?).
 # All dataframes begin with "df" for ease in autocomplete (CTRL + Space)
@@ -36,13 +37,14 @@ df_population = pd.read_csv('./archive/population.csv')
 df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
 df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
 df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
+df_deaths = pd.read_csv('./archive/deaths.csv')
 df_geo = pd.read_csv("barcelona_geo.csv")
 
 # Hard coded names and dataframe names for categories
 category_dict = {
     "Population" : df_population,
     #"Unemployment": df_unemployment,
-    "Immigrants By Nationality": df_immigrants_by_nationality
+    "Immigrants": df_immigrants_by_nationality
     # "Immigrants By Age": df_immigrants_emigrants_by_age,
     # "Immigrants By Sex": df_immigrants_emigrants_by_sex
 }
@@ -83,7 +85,7 @@ if select_category == "Population":
     gender_data = df_unemployment.groupby(['District.Name'])['Number'].sum()
 
 
-elif select_category == "Immigrants By Nationality":
+elif select_category == "Immigrants":
     select_year = st.sidebar.slider("Year", 
                                 min_value= int(df_immigrants_by_nationality.Year.min()), 
                                 max_value= int(df_immigrants_by_nationality.Year.max()))
@@ -145,7 +147,10 @@ def show_maps(data, threshold_scale):
 
 centers = center()
 with map2:
-    st.table(df_population.head(9))
+    if select_category == 'Population':
+        st.table(df_population.head(9))
+    else:
+        st.table(df_immigrants_by_nationality.head(9))
 
 select_data = "Total_Pop"
 
@@ -175,20 +180,74 @@ if isCompare is False:
     # age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
     # gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
 
-    year_data.plot.bar(rot=15, title='Nationality', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-    plt.show(block=True)
-    col1.pyplot()
+    # year_data.plot.bar(rot=15, title='Nationality', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
+    # plt.show(block=True)
+    # col1.pyplot()
+    
+    if select_category == "Immigrants":
+        with col1:
+            df_unemployment_sum = df_unemployment[(df_unemployment['Year']== select_year)]
+            df_unemployment_sum = df_unemployment_sum.groupby(['District.Name','Year'])['Number'].sum().reset_index()
+            df_unemployment_sum.columns = ["District.Name","Year","Number"]
+            fig = px.bar(df_unemployment_sum, x="Year", y="Number", color="District.Name",
+                        hover_name="District.Name", barmode='group', title='Unemployment By District')
 
-    gender_data.plot.bar(rot=15, title='District', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-    plt.xticks(rotation=90)
-    plt.show(block=True)
-    col3.pyplot()
+            st.plotly_chart(fig, use_container_width=True)
+            
+        with col2:
+            df_age_sum = df_immigrants_emigrants_by_age[(df_immigrants_emigrants_by_age['Year']== select_year)]
+            df_age_sum = df_age_sum.groupby(['Age'])['Number'].sum().reset_index()
+            df_age_sum.columns = ["Age","Number"]
+            fig = px.pie(df_age_sum, values='Number', title='Population by age group', names='Age', color_discrete_sequence=px.colors.sequential.RdBu)
+            st.plotly_chart(fig, use_container_width=True)
 
-    age_data.plot.bar(rot=15, title='Age', color=['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'])
-    plt.xticks(rotation=90)
-    plt.show(block=True)
-    col2.pyplot()
+        with col3:
+            df_gender_sum = df_immigrants_emigrants_by_sex[(df_immigrants_emigrants_by_sex['Year']== select_year)]
+            df_gender_sum = df_gender_sum.groupby(['Gender','Year'])['Number'].sum().reset_index()
+            df_gender_sum.columns = ["Gender","Year","Number"]
+            # fig = px.bar(df_gender_sum, x="Gender", y="Number", color="Gender",
+            #             hover_name="Gender", barmode='group', title='Immigrantes by Gender')
+            fig = px.pie(df_gender_sum, values='Number', title='Population by age group', names='Gender', color_discrete_sequence=px.colors.sequential.RdBu)
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        with col1:
+            if (select_year == 2013) or (select_year == 2014):
+                df_death_sum = df_deaths[(df_deaths['Year']== 2015)]
+                df_death_sum = df_death_sum.groupby(['District.Name','Age'])['Number'].sum().reset_index()
+                df_death_sum.columns = ["District.Name","Age","Number"]
+                fig = px.bar(df_death_sum, x="District.Name", y="Number", color="Age", title="Death By Population(2015-2017)")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                df_death_sum = df_deaths[(df_deaths['Year']== select_year)]
+                df_death_sum = df_death_sum.groupby(['District.Name','Age'])['Number'].sum().reset_index()
+                df_death_sum.columns = ["District.Name","Age","Number"]
+                fig = px.bar(df_death_sum, x="District.Name", y="Number", color="Age", title="Death By Population(2015-2017)")
+                st.plotly_chart(fig, use_container_width=True)
+            
+        with col2:
+            df_population_sum = df_population[(df_population['Year']== select_year)]
+            df_population_sum = df_population_sum.groupby(['Age'])['Number'].sum().reset_index()
+            df_population_sum.columns = ["Age","Number"]
+            fig = px.pie(df_population_sum, values='Number', title='Population by age group', names='Age', color_discrete_sequence=px.colors.sequential.RdBu)
+            st.plotly_chart(fig, use_container_width=True)
 
+        with col3:
+            df_population_sum = df_population[(df_population['Year']== select_year)]
+            df_population_sum = df_population_sum.groupby(['District.Name','Year'])['Number'].sum().reset_index()
+            df_population_sum.columns = ["District.Name","Year","Number"]
+            fig = px.bar(df_population_sum, x="Year", y="Number", color="District.Name",
+                        hover_name="District.Name", barmode='group', title='Population By District')
+            st.plotly_chart(fig, use_container_width=True)
+        
+    if select_category == "Immigrants":
+        df_immigrant_sum = df_immigrants_by_nationality[(df_immigrants_by_nationality['Nationality'] != 'Spain') ]
+        df_immigrant_sum = df_immigrant_sum.groupby(['Nationality','Year'])['Number'].sum().reset_index()
+        df_immigrant_sum.columns = ["Nationality","Year","Number"]
+        fig = px.scatter(df_immigrant_sum, x="Number", y="Year",
+                    size="Number", color="Nationality",
+                        hover_name="Nationality", log_x=True, size_max=100)
+        fig.update_xaxes(range=[2, 4])
+        st.plotly_chart(fig, use_container_width= True)
 
 ###########################################################
 ## Compare Work
