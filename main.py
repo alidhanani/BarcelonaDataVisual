@@ -146,11 +146,13 @@ def show_maps(data, threshold_scale):
             folium_static(map_sby)
 
 centers = center()
-with map2:
-    if select_category == 'Population':
-        st.table(df_population.head(9))
-    else:
-        st.table(df_immigrants_by_nationality.head(9))
+
+if isCompare is False:
+    with map2:
+        if select_category == 'Population':
+            st.table(df_population.head(9))
+        else:
+            st.table(df_immigrants_by_nationality.head(9))
 
 select_data = "Total_Pop"
 
