@@ -104,7 +104,7 @@ isCompare = st.sidebar.checkbox("Compare Mode")
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
-map1, map2, map3 = st.beta_columns(3)
+map1, map2 = st.beta_columns(2)
 def center():
     address = 'Barcelona, Spain'
     geolocator = Nominatim(user_agent="id_explorer")
@@ -140,10 +140,12 @@ def show_maps(data, threshold_scale):
                                                         aliases=['District.Name: ', dicts[data]],
                                                         labels=True))                                                       
     if isCompare is False:
-        with map2:
+        with map1:
             folium_static(map_sby)
 
 centers = center()
+with map2:
+    st.table(df_population.head(9))
 
 select_data = "Total_Pop"
 
