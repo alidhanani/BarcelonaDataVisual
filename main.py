@@ -16,9 +16,18 @@ from streamlit_folium import folium_static
 from plotly.subplots import make_subplots
 import time
 from Compare import Compare, DesignSideBarText
+from Fact import fact_table
 import plotly.express as px
 
 st.set_page_config(layout="wide", page_title='Barcelona Data')
+df_unemployment = pd.read_csv('./archive/unemployment.csv')
+df_population = pd.read_csv('./archive/population.csv')
+df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
+df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
+df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
+df_deaths = pd.read_csv('./archive/deaths.csv')
+df_births = pd.read_csv('./archive/births.csv')
+df_geo = pd.read_csv("barcelona_geo.csv")
 
 @st.cache(suppress_st_warning=True)
 def makingProgressBar():
@@ -32,13 +41,6 @@ makingProgressBar()
 # I was thinking it would be good for performance to read 
 # all files at the start(What do you guys think?).
 # All dataframes begin with "df" for ease in autocomplete (CTRL + Space)
-df_unemployment = pd.read_csv('./archive/unemployment.csv')
-df_population = pd.read_csv('./archive/population.csv')
-df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
-df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
-df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
-df_deaths = pd.read_csv('./archive/deaths.csv')
-df_geo = pd.read_csv("barcelona_geo.csv")
 
 # Hard coded names and dataframe names for categories
 category_dict = {
@@ -67,7 +69,7 @@ selected_dataframe = category_dict.get(select_category)
 
 if select_category == "Population":
     select_year = st.sidebar.slider("Year", 
-                                min_value= int(df_population.Year.min()), 
+                                min_value= int(2015), 
                                 max_value= int(df_population.Year.max()))
     select_gender = st.sidebar.radio("Gender",("Both", "Male", "Female"))
     select_age = st.sidebar.selectbox("Age", age)
@@ -98,11 +100,17 @@ elif select_category == "Immigrants":
     gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
     
 
+df_unemployment_grouped = df_unemployment.groupby(['District.Code'])['Number'].sum().reset_index()
 summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index()
-df_map = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
+summed_data = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
+df_map = df_unemployment_grouped.merge(right = summed_data, on = "District.Code", how = "outer").rename(columns={"Number_x": "Population", "Number_y": "Unemployment"})
 df_map = df_map.fillna(0)
 ###################################################
 isCompare = st.sidebar.checkbox("Compare Mode")
+
+x = fact_table(df_population,df_unemployment,df_deaths,
+               df_immigrants_by_nationality,df_immigrants_emigrants_by_age,
+               df_immigrants_emigrants_by_sex,df_births)
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
@@ -140,7 +148,7 @@ def show_maps(data, threshold_scale):
     folium.LayerControl().add_to(map_sby)
     maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri',data],
                                                         aliases=['District.Name: ', dicts[data]],
-                                                        labels=True))                                                       
+                                                        labels=False))                                                       
     if isCompare is False:
         with map1:
             folium_static(map_sby)
@@ -150,9 +158,9 @@ centers = center()
 if isCompare is False:
     with map2:
         if select_category == 'Population':
-            st.table(df_population.head(9))
+            st.table(x.get_pop_facts(select_year))
         else:
-            st.table(df_immigrants_by_nationality.head(9))
+            st.table(x.get_immigration_facts(select_year))
 
 select_data = "Total_Pop"
 
@@ -164,11 +172,15 @@ data_all['District.Name'] = data_all['District.Name'].str.title()
 
 
 dicts = {
-    "Total_Pop":'Number',
+    "Total_Pop":'Population'
 }
 
+tooltip_text = []
 for idx in range(10):
-    data_geo['features'][idx]['properties']['Total_Pop'] = int(data_all['Number'][idx])
+ tooltip_text.append(' has '+str(data_all['Population'][idx])+ ' inhabitants and '+str(data_all['Unemployment'][idx])+ ' unemployees')
+
+for idx in range(10):
+    data_geo['features'][idx]['properties']['Total_Pop'] = tooltip_text[idx]
 
 
 show_maps(select_data, threshold(select_data))
@@ -264,7 +276,7 @@ if isCompare is False:
 if isCompare is True:
     st.sidebar.header('Comparing')
 
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2 = st.beta_columns(2)
     making_textbox = DesignSideBarText()
     all_dist = making_textbox.making_textbox()
 
@@ -278,19 +290,20 @@ if isCompare is True:
     unemployDistrict.makeDataframe(all_dist, select_year, 'District.Name')
     unemployDistrict.showFigure('Unemployment By District Name', col2)
 
+    
+    colNext1, colNext2 = st.beta_columns(2)
+    # populationAge = Compare('./archive/immigrants_emigrants_by_age.csv')
+    # populationAge.makeDataframe(all_dist, select_year, 'Age')
+    # populationAge.showFigure('Population By Age', colNext1, graphBar='barh')
+    
     st.set_option('deprecation.showPyplotGlobalUse', False)
     populationNeighbor = Compare('./archive/population.csv')
     populationNeighbor.makeDataframe(all_dist, select_year, 'Neighborhood.Name')
-    populationNeighbor.showFigure('Population By Gender', col3)
-    
-    colNext1, colNext2 = st.beta_columns(2)
-    populationAge = Compare('./archive/immigrants_emigrants_by_age.csv')
-    populationAge.makeDataframe(all_dist, select_year, 'Age')
-    populationAge.showFigure('Population By Gender', colNext1)
+    populationNeighbor.showFigure('Population By Neighbour',  colNext1, graphBar='barh')
     
     populationSex = Compare('./archive/immigrants_emigrants_by_sex.csv')
     populationSex.makeDataframe(all_dist, select_year, 'Gender')
-    populationSex.showFigure('Population By Gender', colNext2)
+    populationSex.showFigure('Population By Sex', colNext2, graphBar='barh')
 
 # population = Compare('./archive/population.csv')
 # population.makeDataframe(all_dist, select_year, 'Age')

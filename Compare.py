@@ -27,11 +27,18 @@ class Compare:
             df4 = df4.groupby(df4[cate].rename(cate))["Number"].sum().rename(i)
             self.dataframes.append(df4)
             
-    def showFigure(self, titleShow, col):      
+    def showFigure(self, titleShow, col, graphBar='bar'):      
         if(len(self.dataframes) > 0):
             newDF = pd.concat(self.dataframes, axis=1)
             df6 = newDF.T
-            df6.plot.bar(rot=15, title=titleShow)
+            if graphBar == 'bar':      
+                df6.plot.bar(rot=15, title=titleShow)
+            elif graphBar == 'barh':
+                df6.plot.barh(rot=15, title=titleShow)
+            elif graphBar == 'line':
+                df6.plot.line(rot=15, title=titleShow)
+            elif graphBar == 'hist':
+                df6.plot.hist(rot=15, title=titleShow)
             plt.show(block=True)
             col.pyplot()
             
