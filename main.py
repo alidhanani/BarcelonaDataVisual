@@ -29,6 +29,10 @@ df_deaths = pd.read_csv('./archive/deaths.csv')
 df_births = pd.read_csv('./archive/births.csv')
 df_geo = pd.read_csv("barcelona_geo.csv")
 
+x = fact_table(df_population,df_unemployment,df_deaths,
+               df_immigrants_by_nationality,df_immigrants_emigrants_by_age,
+               df_immigrants_emigrants_by_sex,df_births)
+
 @st.cache(suppress_st_warning=True)
 def makingProgressBar():
     my_bar = st.progress(0)
@@ -103,14 +107,13 @@ elif select_category == "Immigrants":
 df_unemployment_grouped = df_unemployment.groupby(['District.Code'])['Number'].sum().reset_index()
 summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index()
 summed_data = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
-df_map = df_unemployment_grouped.merge(right = summed_data, on = "District.Code", how = "outer").rename(columns={"Number_x": "Population", "Number_y": "Unemployment"})
+df_map = df_unemployment_grouped.merge(right = summed_data, on = "District.Code", how = "outer").rename(columns={"Number_y": "Selected Population", "Number_x": "Total Unemployment"})
 df_map = df_map.fillna(0)
 ###################################################
 isCompare = st.sidebar.checkbox("Compare Mode")
 
-x = fact_table(df_population,df_unemployment,df_deaths,
-               df_immigrants_by_nationality,df_immigrants_emigrants_by_age,
-               df_immigrants_emigrants_by_sex,df_births)
+df_pop_data = x.merge_df()
+# st.table(df_pop_data)
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
@@ -126,16 +129,16 @@ def center():
 def threshold(data):
     threshold_scale = np.linspace(data_all[dicts[data]].min(),
                               data_all[dicts[data]].max(),
-                              10, dtype=float)
+                              5, dtype=float)
     threshold_scale = threshold_scale.tolist() # change the numpy array to a list
-    threshold_scale[-1] = threshold_scale[-1]
+    # threshold_scale[-1] = threshold_scale[-1]
     return threshold_scale
 
-def show_maps(data, threshold_scale):
+def show_maps(data, other_data, threshold_scale):
     maps= folium.Choropleth(
         geo_data = data_geo,
         data = data_all,
-        columns=['District.Name',dicts[data]],
+        columns=['District.Name',dicts[data], dicts[other_data]],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
         fill_color='YlOrRd', 
@@ -146,9 +149,9 @@ def show_maps(data, threshold_scale):
         reset=True).add_to(map_sby)
 
     folium.LayerControl().add_to(map_sby)
-    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri',data],
-                                                        aliases=['District.Name: ', dicts[data]],
-                                                        labels=False))                                                       
+    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri',data, other_data],
+                                                        aliases=['District.Name: ', dicts[data], dicts[other_data]],
+                                                        labels=True))                                                       
     if isCompare is False:
         with map1:
             folium_static(map_sby)
@@ -163,6 +166,7 @@ if isCompare is False:
             st.table(x.get_immigration_facts(select_year))
 
 select_data = "Total_Pop"
+other_data = "Unemplyment"
 
 map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
 
@@ -172,18 +176,24 @@ data_all['District.Name'] = data_all['District.Name'].str.title()
 
 
 dicts = {
-    "Total_Pop":'Population'
+    "Total_Pop":'Selected Population',
+    "Unemplyment": 'Total Unemployment'
 }
 
 tooltip_text = []
 for idx in range(10):
- tooltip_text.append(' has '+str(data_all['Population'][idx])+ ' inhabitants and '+str(data_all['Unemployment'][idx])+ ' unemployees')
+ tooltip_text.append(str(data_all['Selected Population'][idx])+ ' inhabitants')
+
+tooltip_text_unemploy = []
+for idx in range(10):
+ tooltip_text_unemploy.append(str(data_all['Total Unemployment'][idx])+ ' unemployees')
 
 for idx in range(10):
     data_geo['features'][idx]['properties']['Total_Pop'] = tooltip_text[idx]
+    data_geo['features'][idx]['properties']['Unemplyment'] = tooltip_text_unemploy[idx]
 
 
-show_maps(select_data, threshold(select_data))
+show_maps(select_data, other_data, threshold(select_data))
 
 ###########################################################
 ## Show Home Map
@@ -259,7 +269,7 @@ if isCompare is False:
         df_immigrant_sum.columns = ["Nationality","Year","Number"]
         fig = px.scatter(df_immigrant_sum, x="Number", y="Year",
                     size="Number", color="Nationality",
-                        hover_name="Nationality", log_x=True, size_max=100)
+                        hover_name="Nationality", log_x=True, size_max=40)
         fig.update_xaxes(range=[2, 4])
         st.plotly_chart(fig, use_container_width= True)
         
