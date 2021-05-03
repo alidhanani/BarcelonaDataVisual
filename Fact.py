@@ -27,6 +27,18 @@ class fact_table:
     self.df_pop_facts = pd.DataFrame(columns= ['Fact', 'District', 'Count'])
     self.df_merge = pd.DataFrame()
 
+  def __init__(self,df_pop,df_unemp,df_deaths,df_nation,df_age,df_sex,df_births):
+    self.df_pop = df_pop
+    self.df_unemp = df_unemp
+    self.df_nation = df_nation
+    self.df_age = df_age
+    self.df_sex = df_sex
+    self.df_deaths = df_deaths
+    self.df_births = df_births
+    self.df_immig_facts = pd.DataFrame(columns= ['Fact', 'Category', 'Count'])
+    self.df_pop_facts = pd.DataFrame(columns= ['Fact', 'District', 'Count'])
+    self.df_merge = pd.DataFrame()
+
   def merge_df(self):
     df1 = self.df_pop.groupby(['Year','District.Code','District.Name'])['Number'].sum().reset_index()
     df1.columns = ['Year','District.Code','District.Name','Population']
@@ -38,35 +50,30 @@ class fact_table:
     df4.columns = ['Year','District.Code','District.Name','Immigrants']
     df5 = self.df_births.groupby(['Year','District Code','District Name'])['Number'].sum().reset_index()
     df5.columns = ['Year','District.Code','District.Name','Births']
-
-    df6 = pd.merge(
-      df1,
+    df6 = df1.merge(
       df2,
       left_on=['Year','District.Code','District.Name'],
       right_on=['Year','District.Code','District.Name'],
-      how = 'inner'
+      how = 'left'
     )
 
-    df7 = pd.merge(
-        df6,
+    df7 = df6.merge(
         df3,
         left_on=['Year','District.Code','District.Name'],
         right_on=['Year','District.Code','District.Name'],
-        how = 'inner'
+        how = 'left'
     )
-    df8 = pd.merge(
-        df7,
+    df8 = df7.merge(
         df4,
         left_on=['Year','District.Code','District.Name'],
         right_on=['Year','District.Code','District.Name'],
-        how = 'inner'
+        how = 'left'
     )
-    df9 = pd.merge(
-        df8,
+    df9 = df8.merge(
         df5,
         left_on=['Year','District.Code','District.Name'],
         right_on=['Year','District.Code','District.Name'],
-        how = 'inner'
+        how = 'left'
     )
     df9 = df9.assign(unemp_perc = lambda row: (row['Unemployment'] / row['Population']) * 100)
     df9 = df9.assign(immigration_perc = lambda row: (row['Immigrants'] / row['Population']) * 100)
@@ -79,7 +86,6 @@ class fact_table:
     self.df_year = self.df_merge[(self.df_merge['Year']== year)]
 
 #population
-    print(self.df_year.head())
     row = self.df_year.loc[self.df_year['Population'].idxmax()]
     data1 = {
       'Fact': ['Highest Population',],

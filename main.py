@@ -20,14 +20,19 @@ from Fact import fact_table
 import plotly.express as px
 
 st.set_page_config(layout="wide", page_title='Barcelona Data')
-df_unemployment = pd.read_csv('./archive/unemployment.csv')
-df_population = pd.read_csv('./archive/population.csv')
-df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
-df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
-df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
-df_deaths = pd.read_csv('./archive/deaths.csv')
-df_births = pd.read_csv('./archive/births.csv')
-df_geo = pd.read_csv("barcelona_geo.csv")
+@st.cache
+def load_csv():
+    df_unemployment = pd.read_csv('./archive/unemployment.csv')
+    df_population = pd.read_csv('./archive/population.csv')
+    df_immigrants_by_nationality = pd.read_csv('./archive/immigrants_by_nationality.csv')
+    df_immigrants_emigrants_by_age = pd.read_csv('./archive/immigrants_emigrants_by_age.csv')
+    df_immigrants_emigrants_by_sex = pd.read_csv('./archive/immigrants_emigrants_by_sex.csv')
+    df_deaths = pd.read_csv('./archive/deaths.csv')
+    df_births = pd.read_csv('./archive/births.csv')
+    df_geo = pd.read_csv("barcelona_geo.csv")
+    return df_unemployment, df_population, df_immigrants_by_nationality, df_immigrants_emigrants_by_age, df_immigrants_emigrants_by_sex,df_deaths,df_births,df_geo
+
+df_unemployment, df_population, df_immigrants_by_nationality, df_immigrants_emigrants_by_age,df_immigrants_emigrants_by_sex,df_deaths,df_births,df_geo = load_csv()
 
 x = fact_table(df_population,df_unemployment,df_deaths,
                df_immigrants_by_nationality,df_immigrants_emigrants_by_age,
@@ -51,8 +56,6 @@ category_dict = {
     "Population" : df_population,
     #"Unemployment": df_unemployment,
     "Immigrants": df_immigrants_by_nationality
-    # "Immigrants By Age": df_immigrants_emigrants_by_age,
-    # "Immigrants By Sex": df_immigrants_emigrants_by_sex
 }
 
 
@@ -103,17 +106,22 @@ elif select_category == "Immigrants":
     age_data = df_immigrants_emigrants_by_age.groupby(['Age'])['Number'].sum()
     gender_data = df_immigrants_by_nationality.groupby(['District.Name'])['Number'].sum()
     
+df_pop_data = x.merge_df()
+df_pop_data = df_pop_data[df_pop_data.Year == select_year]
 
-df_unemployment_grouped = df_unemployment.groupby(['District.Code'])['Number'].sum().reset_index()
-summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index()
+summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index().rename(columns={"Number": "Selected Population"})
 summed_data = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
-df_map = df_unemployment_grouped.merge(right = summed_data, on = "District.Code", how = "outer").rename(columns={"Number_y": "Selected Population", "Number_x": "Total Unemployment"})
+df_map = df_pop_data.merge(right = summed_data, on = ["District.Code"], how = "outer")
 df_map = df_map.fillna(0)
+df_map = df_map.rename(columns={"Population": "Total Population", "Unemployment": "Total Unemployment",
+                                "Deaths": "Total Deaths", "Immigrants": "Total Immigrants",
+                                "Births": "Total Births", "District.Name_x" : "District.Name"})
+#ALI Remove this line before final commit
+st.table(df_map.head(10))
 ###################################################
 isCompare = st.sidebar.checkbox("Compare Mode")
 
-df_pop_data = x.merge_df()
-# st.table(df_pop_data)
+
 
 data_all = df_map
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
@@ -139,6 +147,7 @@ def show_maps(data, other_data, threshold_scale):
         geo_data = data_geo,
         data = data_all,
         columns=['District.Name',dicts[data], dicts[other_data]],
+        # columns=['District.Name','Population'],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
         fill_color='YlOrRd', 
@@ -271,12 +280,14 @@ if isCompare is False:
                     size="Number", color="Nationality",
                         hover_name="Nationality", log_x=True, size_max=40)
         fig.update_xaxes(range=[2, 4])
+        fig.update_yaxes(tick0=2015, dtick=1)
         st.plotly_chart(fig, use_container_width= True)
         
         df_unemployment_sum = df_unemployment.groupby(['District.Name','Year'])['Number'].sum().reset_index()
         df_unemployment_sum.columns = ["District.Name","Year","Number"]
         fig = px.line(df_unemployment_sum, x="Year", y="Number", color="District.Name",
-                    hover_name="Number")
+                    hover_name="Number" )
+        fig.update_xaxes(tick0=2013, dtick=1)
         st.plotly_chart(fig, use_container_width= True)
 
 ###########################################################
