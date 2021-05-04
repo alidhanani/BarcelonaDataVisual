@@ -143,11 +143,11 @@ def threshold(data):
     # threshold_scale[-1] = threshold_scale[-1]
     return threshold_scale
 
-def show_maps(data, other_data, district_name, death, immigrants, births,threshold_scale):
+def show_maps(data, other_data, district_name, death, immigrants, births,total_pop,threshold_scale):
     maps= folium.Choropleth(
         geo_data = data_geo,
         data = data_all,
-        columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
+        columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
         fill_color='YlOrRd', 
@@ -158,8 +158,8 @@ def show_maps(data, other_data, district_name, death, immigrants, births,thresho
         reset=True).add_to(map_sby)
 
     folium.LayerControl().add_to(map_sby)
-    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=[district_name,data, other_data, death, immigrants, births],
-                                                        aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
+    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=[district_name,data, other_data, death, immigrants, births, total_pop],
+                                                        aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
                                                         labels=True))                                                       
     if isCompare is False:
         with map1:
@@ -180,6 +180,7 @@ district_name = "District_Name"
 deaths = "Deaths"
 immigrants = "Immigrants"
 births = "Births"
+total_pop = "Total_Population"
 
 map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
 
@@ -194,12 +195,17 @@ dicts = {
     "District_Name": 'District.Name',
     "Deaths": 'Total Deaths',
     "Immigrants": 'Total Immigrants',
-    "Births": 'Total Births'
+    "Births": 'Total Births',
+    "Total_Population": 'Total Population'
 }
 
 tooltip_text = []
 for idx in range(10):
  tooltip_text.append(str(data_all['Selected Population'][idx])+ ' inhabitants')
+ 
+ tooltip_text_total_pop = []
+for idx in range(10):
+ tooltip_text_total_pop.append(str(data_all['Total Population'][idx])+ ' inhabitants')
  
 tooltip_text_distict = []
 for idx in range(10):
@@ -228,9 +234,10 @@ for idx in range(10):
     data_geo['features'][idx]['properties']['Deaths'] = tooltip_text_deaths[idx]
     data_geo['features'][idx]['properties']['Immigrants'] = tooltip_text_immigrants[idx]
     data_geo['features'][idx]['properties']['Births'] = tooltip_text_births[idx]
+    data_geo['features'][idx]['properties']['Total_Population'] = tooltip_text_total_pop[idx]
 
 
-show_maps(select_data, other_data, district_name,deaths,immigrants,births,threshold(select_data))
+show_maps(select_data, other_data, district_name,deaths,immigrants,births,total_pop,threshold(select_data))
 
 ###########################################################
 ## Show Home Map
