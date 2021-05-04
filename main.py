@@ -143,11 +143,11 @@ def threshold(data):
     # threshold_scale[-1] = threshold_scale[-1]
     return threshold_scale
 
-def show_maps(data, other_data, district_name, threshold_scale):
+def show_maps(data, other_data, district_name, death, immigrants, births,threshold_scale):
     maps= folium.Choropleth(
         geo_data = data_geo,
         data = data_all,
-        columns=['District.Name',dicts[data], dicts[other_data]],
+        columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
         fill_color='YlOrRd', 
@@ -158,8 +158,8 @@ def show_maps(data, other_data, district_name, threshold_scale):
         reset=True).add_to(map_sby)
 
     folium.LayerControl().add_to(map_sby)
-    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=[district_name,data, other_data],
-                                                        aliases=['District.Name: ', dicts[data], dicts[other_data]],
+    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=[district_name,data, other_data, death, immigrants, births],
+                                                        aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
                                                         labels=True))                                                       
     if isCompare is False:
         with map1:
@@ -177,6 +177,9 @@ if isCompare is False:
 select_data = "Total_Pop"
 other_data = "Unemplyment"
 district_name = "District_Name"
+deaths = "Deaths"
+immigrants = "Immigrants"
+births = "Births"
 
 map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
 
@@ -188,7 +191,10 @@ data_all['District.Name'] = data_all['District.Name'].str.title()
 dicts = {
     "Total_Pop":'Selected Population',
     "Unemplyment": 'Total Unemployment',
-    "District_Name": 'District.Name'
+    "District_Name": 'District.Name',
+    "Deaths": 'Total Deaths',
+    "Immigrants": 'Total Immigrants',
+    "Births": 'Total Births'
 }
 
 tooltip_text = []
@@ -202,14 +208,29 @@ for idx in range(10):
 tooltip_text_unemploy = []
 for idx in range(10):
  tooltip_text_unemploy.append(str(data_all['Total Unemployment'][idx])+ ' unemployees')
+ 
+ tooltip_text_deaths = []
+for idx in range(10):
+ tooltip_text_deaths.append(str(data_all['Total Deaths'][idx])+ ' deaths')
+ 
+ tooltip_text_immigrants = []
+for idx in range(10):
+ tooltip_text_immigrants.append(str(data_all['Total Immigrants'][idx])+ ' immigrants')
+ 
+ tooltip_text_births = []
+for idx in range(10):
+ tooltip_text_births.append(str(data_all['Total Births'][idx])+ ' births')
 
 for idx in range(10):
     data_geo['features'][idx]['properties']['Total_Pop'] = tooltip_text[idx]
     data_geo['features'][idx]['properties']['Unemplyment'] = tooltip_text_unemploy[idx]
     data_geo['features'][idx]['properties']['District_Name'] = tooltip_text_distict[idx]
+    data_geo['features'][idx]['properties']['Deaths'] = tooltip_text_deaths[idx]
+    data_geo['features'][idx]['properties']['Immigrants'] = tooltip_text_immigrants[idx]
+    data_geo['features'][idx]['properties']['Births'] = tooltip_text_births[idx]
 
 
-show_maps(select_data, other_data, district_name,threshold(select_data))
+show_maps(select_data, other_data, district_name,deaths,immigrants,births,threshold(select_data))
 
 ###########################################################
 ## Show Home Map
