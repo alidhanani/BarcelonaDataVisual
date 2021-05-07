@@ -275,7 +275,7 @@ if isCompare is False:
             df_gender_sum.columns = ["Gender","Year","Number"]
             # fig = px.bar(df_gender_sum, x="Gender", y="Number", color="Gender",
             #             hover_name="Gender", barmode='group', title='Immigrantes by Gender')
-            fig = px.pie(df_gender_sum, values='Number', title='Population by age group', names='Gender', color_discrete_sequence=px.colors.sequential.RdBu)
+            fig = px.pie(df_gender_sum, values='Number', title='Population by gender group', names='Gender', color_discrete_sequence=px.colors.sequential.RdBu)
             st.plotly_chart(fig, use_container_width=True)
     else:
         with col1:
@@ -296,7 +296,8 @@ if isCompare is False:
             df_population_sum = df_population[(df_population['Year']== select_year)]
             df_population_sum = df_population_sum.groupby(['Age'])['Number'].sum().reset_index()
             df_population_sum.columns = ["Age","Number"]
-            fig = px.pie(df_population_sum, values='Number', title='Population by age group', names='Age', color_discrete_sequence=px.colors.sequential.RdBu)
+            #fig = px.pie(df_population_sum, values='Number', title='Population by age group', names='Age', color_discrete_sequence=px.colors.sequential.RdBu)
+            fig = px.bar(df_population_sum, x='Number', y='Age', title='Population By Age Group', color_discrete_sequence=px.colors.sequential.RdBu)
             st.plotly_chart(fig, use_container_width=True)
 
         with col3:
