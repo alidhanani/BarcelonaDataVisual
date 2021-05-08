@@ -105,11 +105,11 @@ def threshold(data):
     # threshold_scale[-1] = threshold_scale[-1]
     return threshold_scale
 
-def show_maps(data, other_data, district_name, death, immigrants, births,total_pop,threshold_scale):
+def show_maps(data, other_data, district_name, death, immigrants, births,threshold_scale):
     maps= folium.Choropleth(
         geo_data = data_geo,
         data = data_all,
-        columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
+        columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
         fill_color='YlGn', 
@@ -120,8 +120,8 @@ def show_maps(data, other_data, district_name, death, immigrants, births,total_p
         reset=True).add_to(map_sby)
 
     folium.LayerControl().add_to(map_sby)
-    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri','Total_Pop', 'Unemplyment', 'Deaths', 'Immigrants', 'Births', 'Total_Pop'],
-                                                        aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
+    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri','Total_Pop', 'Unemplyment', 'Deaths', 'Immigrants', 'Births'],
+                                                        aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births]],
                                                         labels=True))                                                       
     if select_category == "Immigrants (By Nationality)":
         with map1:
@@ -169,7 +169,6 @@ if select_category != "District Comparison" and select_category != 'Key Trends' 
     deaths = "Deaths"
     immigrants = "Immigrants"
     births = "Births"
-    total_pop = "Total_Population"
 
     map_sby = folium.Map(width='100%', height='100%', left='0%', top='0%', position='relative',tiles="Stamen Terrain", location=[centers[0], centers[1]], zoom_start=12)
 
@@ -184,7 +183,6 @@ if select_category != "District Comparison" and select_category != 'Key Trends' 
         "Deaths": 'Total Deaths',
         "Immigrants": 'Total Immigrants',
         "Births": 'Total Births',
-        "Total_Population": 'Total Population'
     }
 
     tooltip_text = []
@@ -223,10 +221,9 @@ if select_category != "District Comparison" and select_category != 'Key Trends' 
         data_geo['features'][idx]['properties']['Deaths'] = tooltip_text_deaths[index-1]
         data_geo['features'][idx]['properties']['Immigrants'] = tooltip_text_immigrants[index-1]
         data_geo['features'][idx]['properties']['Births'] = tooltip_text_births[index-1]
-        data_geo['features'][idx]['properties']['Total_Population'] = tooltip_text_total_pop[index-1]
 
 
-    show_maps(select_data, other_data, district_name,deaths,immigrants,births,total_pop,threshold(select_data))
+    show_maps(select_data, other_data, district_name,deaths,immigrants,births,threshold(select_data))
 
 ###########################################################
 ## Show Home Map
@@ -278,18 +275,20 @@ if select_category != "District Comparison" :
             df_immigrant_sum = df_immigrants_by_nationality[(df_immigrants_by_nationality['Nationality'] != 'Spain') ]
             df_immigrant_sum = df_immigrant_sum.groupby(['Nationality','Year'])['Number'].sum().reset_index()
             df_immigrant_sum.columns = ["Nationality","Year","Number"]
-            st.markdown("<h5 style='text-align: center; color: black;'>Immigrants by Nationality</h5>", unsafe_allow_html=True)
+            df_immigrant_sum = df_immigrant_sum.sort_values(by = ['Number','Year'], ascending = False)
+            df_immigrant_sum = df_immigrant_sum.head(30)
+            st.markdown("<h5 style='text-align: center; color: black;'>Immigrants by Nationality (Top 10 Per Year)</h5>", unsafe_allow_html=True)
             fig = px.scatter(df_immigrant_sum, x="Number", y="Year",
                         size="Number", color="Nationality",
-                            hover_name="Nationality", log_x=True, size_max=40, range_y=[2014, 2018],
+                            hover_name="Nationality", log_x=True, size_max=20, range_y=[2014, 2018],
                             color_discrete_sequence=px.colors.qualitative.Light24)
-            fig.update_xaxes(range=[2, 4])
+            # fig.update_xaxes(range=[0, 4])
             fig.update_yaxes(tick0=2015, dtick=1)
             fig.update_layout(
                 plot_bgcolor="White",
                 margin=dict(t=10,l=10,b=100,r=10)
             )
-            st.plotly_chart(fig, use_container_width= False) 
+            st.plotly_chart(fig, use_container_width= False)  
     
     elif select_category == "Yearly Data (Population)":
         col1, col2, col3 = st.beta_columns(3)
