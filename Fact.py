@@ -39,6 +39,27 @@ class fact_table:
     self.df_pop_facts = pd.DataFrame(columns= ['Fact', 'District', 'Count'])
     self.df_merge = pd.DataFrame()
 
+  def get_immigration_nationality_facts(self,year, nationality):
+      self.merge_df()
+      #Immigration By Nationality
+      self.df1  = self.df_nation.groupby(['Year','District.Name','Neighborhood.Name','Nationality'])['Number'].sum().reset_index()
+      self.df1.columns = ['Year','District','Neighborhood','Nationality','Immigrants']
+      self.df1 = self.df1[(self.df1['Year']== year) & (self.df1['Nationality']== nationality) ]
+      self.df1 = self.df1.sort_values(by = 'Immigrants', ascending = False)
+      self.df1 = self.df1.head(10)
+
+      # row = self.df1.loc[self.df1['Immigrants'].idxmax()]
+      for index, row in self.df1.iterrows():
+        data1 = {
+          'Fact': [row['District']],
+          'Category': [row['Neighborhood']],
+          'Count': [row['Immigrants']]
+        }
+        self.df2 = pd.DataFrame(data1)
+        self.df_immig_facts = self.df_immig_facts.append(self.df2,ignore_index= True)
+
+      return self.df_immig_facts
+
   def merge_df(self):
     df1 = self.df_pop.groupby(['Year','District.Code','District.Name'])['Number'].sum().reset_index()
     df1.columns = ['Year','District.Code','District.Name','Population']
@@ -75,10 +96,11 @@ class fact_table:
         right_on=['Year','District.Code','District.Name'],
         how = 'left'
     )
-    df9 = df9.assign(unemp_perc = lambda row: (row['Unemployment'] / row['Population']) * 100)
-    df9 = df9.assign(immigration_perc = lambda row: (row['Immigrants'] / row['Population']) * 100)
-    df9 = df9.assign(birth_perc = lambda row: (row['Births'] / row['Population']) * 100)
-    self.df_merge = df9.assign(mortality_rate = lambda row: (row['Deaths'] / row['Population']) * 100)
+    df9 = df9.assign(Unemployment = lambda row: round((row['Unemployment'] / 12),2))
+    df9 = df9.assign(unemp_perc = lambda row: (round(row['Unemployment'] / row['Population'],4)) * 100)
+    df9 = df9.assign(immigration_perc = lambda row: round((row['Immigrants'] / row['Population']), 4) * 100)
+    df9 = df9.assign(birth_perc = lambda row: round((row['Births'] / row['Population']),4) * 100)
+    self.df_merge = df9.assign(mortality_rate = lambda row: round((row['Deaths'] / row['Population']),4) * 100)
     return self.df_merge
 
   def get_pop_facts(self,year):
@@ -287,3 +309,6 @@ class fact_table:
     df1 = pd.DataFrame(data1)
     self.df_immig_facts = self.df_immig_facts.append(df1,ignore_index= True)
     return self.df_immig_facts
+
+
+   
