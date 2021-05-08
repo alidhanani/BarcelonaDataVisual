@@ -21,7 +21,7 @@ import plotly.express as px
 
 st.set_page_config(layout="wide", page_title='Barcelona Data')
 
-@st.cache
+# @st.cache
 def load_csv():
     df_unemployment = pd.read_csv('./archive/unemployment.csv')
     df_population = pd.read_csv('./archive/population.csv')
@@ -116,6 +116,7 @@ df_pop_data = df_pop_data[df_pop_data.Year == select_year]
 
 summed_data = selected_data.groupby(['District.Code'])['Number'].sum().reset_index().rename(columns={"Number": "Selected Population"})
 summed_data = summed_data.merge(right = df_geo, on = "District.Code", how = "outer")
+
 df_map = df_pop_data.merge(right = summed_data, on = ["District.Code"], how = "outer")
 df_map = df_map.fillna(0)
 df_map = df_map.rename(columns={"Population": "Total Population", "Unemployment": "Total Unemployment",
@@ -125,6 +126,7 @@ df_map = df_map.rename(columns={"Population": "Total Population", "Unemployment"
 isCompare = st.sidebar.checkbox("Compare Mode")
 
 data_all = df_map
+st.table(data_all.head(10))
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
 map1, map2 = st.beta_columns(2)
 def center():
@@ -150,7 +152,7 @@ def show_maps(data, other_data, district_name, death, immigrants, births,total_p
         columns=['District.Name',dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
         key_on='feature.properties.n_distri',
         threshold_scale=threshold_scale,
-        fill_color='YlOrRd', 
+        fill_color='PuBuGn', 
         fill_opacity=0.7, 
         line_opacity=0.5,
         legend_name=dicts[data],
@@ -158,7 +160,7 @@ def show_maps(data, other_data, district_name, death, immigrants, births,total_p
         reset=True).add_to(map_sby)
 
     folium.LayerControl().add_to(map_sby)
-    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=[district_name,data, other_data, death, immigrants, births, total_pop],
+    maps.geojson.add_child(folium.features.GeoJsonTooltip(fields=['n_distri','Total_Pop', 'Unemplyment', 'Deaths', 'Immigrants', 'Births', 'Total_Pop'],
                                                         aliases=['District.Name: ', dicts[data], dicts[other_data], dicts[death], dicts[immigrants], dicts[births], dicts[total_pop]],
                                                         labels=True))                                                       
     if isCompare is False:
@@ -228,13 +230,14 @@ for idx in range(10):
  tooltip_text_births.append(str(data_all['Total Births'][idx])+ ' births')
 
 for idx in range(10):
-    data_geo['features'][idx]['properties']['Total_Pop'] = tooltip_text[idx]
-    data_geo['features'][idx]['properties']['Unemplyment'] = tooltip_text_unemploy[idx]
-    data_geo['features'][idx]['properties']['District_Name'] = tooltip_text_distict[idx]
-    data_geo['features'][idx]['properties']['Deaths'] = tooltip_text_deaths[idx]
-    data_geo['features'][idx]['properties']['Immigrants'] = tooltip_text_immigrants[idx]
-    data_geo['features'][idx]['properties']['Births'] = tooltip_text_births[idx]
-    data_geo['features'][idx]['properties']['Total_Population'] = tooltip_text_total_pop[idx]
+    index = int(data_geo['features'][idx]['properties']['c_distri'])
+    data_geo['features'][idx]['properties']['Total_Pop'] = tooltip_text[index-1]
+    data_geo['features'][idx]['properties']['Unemplyment'] = tooltip_text_unemploy[index-1]
+    data_geo['features'][idx]['properties']['District_Name'] = tooltip_text_distict[index-1]
+    data_geo['features'][idx]['properties']['Deaths'] = tooltip_text_deaths[index-1]
+    data_geo['features'][idx]['properties']['Immigrants'] = tooltip_text_immigrants[index-1]
+    data_geo['features'][idx]['properties']['Births'] = tooltip_text_births[index-1]
+    data_geo['features'][idx]['properties']['Total_Population'] = tooltip_text_total_pop[index-1]
 
 
 show_maps(select_data, other_data, district_name,deaths,immigrants,births,total_pop,threshold(select_data))
