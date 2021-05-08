@@ -335,7 +335,7 @@ if isCompare is False:
 if isCompare is True:
     st.sidebar.header('Comparing')
 
-    col1, col2 = st.beta_columns(2)
+    col1, col2, col3 = st.beta_columns(3)
     making_textbox = DesignSideBarText()
     all_dist = making_textbox.making_textbox()
 
@@ -347,22 +347,28 @@ if isCompare is True:
     st.set_option('deprecation.showPyplotGlobalUse', False)
     unemployDistrict = Compare('./archive/unemployment.csv')
     unemployDistrict.makeDataframe(all_dist, select_year, 'District.Name')
-    unemployDistrict.showFigure('Unemployment By District Name', col2)
+    unemployDistrict.showFigure('Unemployment By District Name', col2, graphBar='bar')
 
-    
-    colNext1, colNext2 = st.beta_columns(2)
     # populationAge = Compare('./archive/immigrants_emigrants_by_age.csv')
     # populationAge.makeDataframe(all_dist, select_year, 'Age')
     # populationAge.showFigure('Population By Age', colNext1, graphBar='barh')
     
     st.set_option('deprecation.showPyplotGlobalUse', False)
     populationNeighbor = Compare('./archive/population.csv')
-    populationNeighbor.makeDataframe(all_dist, select_year, 'Neighborhood.Name')
-    populationNeighbor.showFigure('Population By Neighbour',  colNext1, graphBar='barh')
+    populationNeighbor.makeDataframe(all_dist, select_year, 'Gender')
+    populationNeighbor.showFigure('Population By Gender',  col3, graphBar='barh')
     
     populationSex = Compare('./archive/immigrants_emigrants_by_sex.csv')
     populationSex.makeDataframe(all_dist, select_year, 'Gender')
-    populationSex.showFigure('Population By Sex', colNext2, graphBar='barh')
+    populationSex.showFigure('Immigrants By Gender', col1, graphBar='barh')
+    
+    imigrantsDistrict = Compare('./archive/immigrants_by_nationality.csv')
+    imigrantsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
+    imigrantsDistrict.showFigure('Immigrants By District Name', col2, graphBar='barh')
+    
+    deathsDistrict = Compare('./archive/deaths.csv')
+    deathsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
+    deathsDistrict.showFigure('Deaths By District Name', col3, graphBar='barh')
 
 # population = Compare('./archive/population.csv')
 # population.makeDataframe(all_dist, select_year, 'Age')
