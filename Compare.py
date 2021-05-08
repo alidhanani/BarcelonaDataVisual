@@ -8,6 +8,15 @@ import numpy as np
 import folium # map rendering library
 from streamlit_folium import folium_static
 from plotly.subplots import make_subplots
+import matplotlib as mpl
+from matplotlib import cm
+from colorspacious import cspace_converter
+from collections import OrderedDict
+from matplotlib.patches import Rectangle
+import matplotlib.colors as mcolors
+from cycler import cycler
+
+cmaps = OrderedDict()
 
 
 class Compare:
@@ -18,10 +27,10 @@ class Compare:
     def getData(self):
         return pd.read_csv(self.url)
     
-    def makeDataframe(self, all_dist, select_year, cate):
+    def makeDataframe(self, all_dist, select_year, cate, dfFilter='District.Name'):
         df = self.getData()
         for i in all_dist:
-            df4 = df[(df['District.Name'] == i) 
+            df4 = df[(df[dfFilter] == i) 
                 & (df['Year'] == select_year)]
             # & (df['Neighborhood Name'] == selected_neighborhood)]
             df4 = df4.groupby(df4[cate].rename(cate))["Number"].sum().rename(i)
@@ -29,19 +38,24 @@ class Compare:
             
     def showFigure(self, titleShow, col, graphBar='bar'):      
         if(len(self.dataframes) > 0):
+            colors = ['#3B5323', '#78AB46', '#4A7023', '#458B00', '#66CD00', '#7F9A65', '#9CBA7F', '#3D5229', '#659D32', '#BCED91', '#586949', '#BCED91', '#83F52C', '#77896C', '#A6D785', '#4DBD33', '#C1CDC1', '#66FF66', '#BDFCC9']
             newDF = pd.concat(self.dataframes, axis=1)
             df6 = newDF.T
             if graphBar == 'bar':      
-                df6.plot.bar(rot=15, title=titleShow)
+                df6.plot.bar(rot=15, title=titleShow, color=colors)
             elif graphBar == 'barh':
-                df6.plot.barh(rot=15, title=titleShow)
+                df6.plot.barh(rot=15, title=titleShow, color=colors)
             elif graphBar == 'line':
-                df6.plot.line(rot=15, title=titleShow)
+                df6.plot.line(rot=15, title=titleShow, color=colors)
             elif graphBar == 'hist':
-                df6.plot.hist(rot=15, title=titleShow)
+                df6.plot.hist(rot=15, title=titleShow, color=colors)
+            plt.rcParams["figure.figsize"] = (15,20)
+            plt.rcParams.update({'font.size': 30})
             plt.show(block=True)
             col.pyplot()
             
+                # fig = px.bar(df_death_sum, x="District.Name", y="Number", color="Age", title="Death By Population(2015-2017)")
+                # st.plotly_chart(fig, use_container_width=True)
 class DesignSideBarText:
     
     def __init__(self):
@@ -58,7 +72,9 @@ class DesignSideBarText:
         if num_dist == "":
             num_dist = "2"
         for i in range(0, int(num_dist)):
-            all_dist.append(st.sidebar.selectbox('District.Name '+str(i), district_names))
+            value = st.sidebar.selectbox('District.Name '+str(i), district_names)
+            district_names = np.delete(district_names, np.argwhere(district_names == value))
+            all_dist.append(value)
         return all_dist
     
     
