@@ -42,6 +42,8 @@ class Compare:
             plt.show(block=True)
             col.pyplot()
             
+                # fig = px.bar(df_death_sum, x="District.Name", y="Number", color="Age", title="Death By Population(2015-2017)")
+                # st.plotly_chart(fig, use_container_width=True)
 class DesignSideBarText:
     
     def __init__(self):
@@ -58,7 +60,9 @@ class DesignSideBarText:
         if num_dist == "":
             num_dist = "2"
         for i in range(0, int(num_dist)):
-            all_dist.append(st.sidebar.selectbox('District.Name '+str(i), district_names))
+            value = st.sidebar.selectbox('District.Name '+str(i), district_names)
+            district_names = np.delete(district_names, np.argwhere(district_names == value))
+            all_dist.append(value)
         return all_dist
     
     

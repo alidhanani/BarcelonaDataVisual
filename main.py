@@ -126,7 +126,6 @@ df_map = df_map.rename(columns={"Population": "Total Population", "Unemployment"
 isCompare = st.sidebar.checkbox("Compare Mode")
 
 data_all = df_map
-st.table(data_all.head(10))
 data_geo = json.load(open('shapefiles_barcelona_distrito.geojson'))
 map1, map2 = st.beta_columns(2)
 def center():
