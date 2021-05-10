@@ -8,15 +8,6 @@ import numpy as np
 import folium # map rendering library
 from streamlit_folium import folium_static
 from plotly.subplots import make_subplots
-import matplotlib as mpl
-from matplotlib import cm
-from colorspacious import cspace_converter
-from collections import OrderedDict
-from matplotlib.patches import Rectangle
-import matplotlib.colors as mcolors
-from cycler import cycler
-
-cmaps = OrderedDict()
 
 
 class Compare:
