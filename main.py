@@ -187,7 +187,7 @@ if select_category != "District Comparison" and select_category != 'Key Trends' 
 
     tooltip_text = []
     for idx in range(10):
-        tooltip_text.append(str(data_all['Selected Population'][idx])+ ' inhabitants')
+        tooltip_text.append(str(data_all['Selected Population'][idx])+ ' / '+str(data_all['Total Population'][idx])+' inhabitants')
     
     tooltip_text_total_pop = []
     for idx in range(10):
