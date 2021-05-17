@@ -27,7 +27,7 @@ class Compare:
             df4 = df4.groupby(df4[cate].rename(cate))["Number"].sum().rename(i)
             self.dataframes.append(df4)
             
-    def showFigure(self, titleShow, col, graphBar='bar'):      
+    def showFigure(self, titleShow, col, graphBar='bar', xlabel='District', ylabel=''):      
         if(len(self.dataframes) > 0):
             colors = ['#3B5323', '#78AB46', '#4A7023', '#458B00', '#66CD00', '#7F9A65', '#9CBA7F', '#3D5229', '#659D32', '#BCED91', '#586949', '#BCED91', '#83F52C', '#77896C', '#A6D785', '#4DBD33', '#C1CDC1', '#66FF66', '#BDFCC9']
             newDF = pd.concat(self.dataframes, axis=1)
@@ -42,6 +42,8 @@ class Compare:
                 df6.plot.hist(rot=15, title=titleShow, color=colors)
             plt.rcParams["figure.figsize"] = (15,20)
             plt.rcParams.update({'font.size': 30})
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
             plt.show(block=True)
             col.pyplot()
             

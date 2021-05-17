@@ -97,10 +97,10 @@ class fact_table:
         how = 'left'
     )
     df9 = df9.assign(Unemployment = lambda row: round((row['Unemployment'] / 12),2))
-    df9 = df9.assign(unemp_perc = lambda row: (round(row['Unemployment'] / row['Population'],4)) * 100)
-    df9 = df9.assign(immigration_perc = lambda row: round((row['Immigrants'] / row['Population']), 4) * 100)
-    df9 = df9.assign(birth_perc = lambda row: round((row['Births'] / row['Population']),4) * 100)
-    self.df_merge = df9.assign(mortality_rate = lambda row: round((row['Deaths'] / row['Population']),4) * 100)
+    df9 = df9.assign(unemp_perc = lambda row: (round(row['Unemployment'] / row['Population'],2)) * 100)
+    df9 = df9.assign(immigration_perc = lambda row: round((row['Immigrants'] / row['Population']), 2) * 100)
+    df9 = df9.assign(birth_perc = lambda row: round((row['Births'] / row['Population']),2) * 100)
+    self.df_merge = df9.assign(mortality_rate = lambda row: round((row['Deaths'] / row['Population']),2) * 100)
     return self.df_merge
 
   def get_pop_facts(self,year):
@@ -140,9 +140,9 @@ class fact_table:
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
     row = self.df_year.loc[self.df_year['birth_perc'].idxmax()]
     data1 = {
-      'Fact': ['Highest Birth %',],
+      'Fact': ['Highest Birth (Percentage)',],
       'District': [row['District.Name']],
-      'Count': [row['birth_perc']]
+      'Count': str(row['birth_perc'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
@@ -160,9 +160,9 @@ class fact_table:
 
     row = self.df_year.loc[self.df_year['birth_perc'].idxmin()]
     data1 = {
-      'Fact': ['Least Birth %',],
+      'Fact': ['Least Birth (Percentage)',],
       'District': [row['District.Name']],
-      'Count': [row['birth_perc']]
+      'Count': str(row['birth_perc'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
@@ -177,9 +177,9 @@ class fact_table:
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
     row = self.df_year.loc[self.df_year['mortality_rate'].idxmax()]
     data1 = {
-      'Fact': ['Highest Death %',],
+      'Fact': ['Highest Death (Percentage)',],
       'District': [row['District.Name']],
-      'Count': [row['mortality_rate']]
+      'Count': str(row['mortality_rate'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
@@ -196,9 +196,9 @@ class fact_table:
 
     row = self.df_year.loc[self.df_year['mortality_rate'].idxmin()]
     data1 = {
-      'Fact': ['Least Death %',],
+      'Fact': ['Least Death (Percentage)',],
       'District': [row['District.Name']],
-      'Count': [row['mortality_rate']]
+      'Count': str(row['mortality_rate'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_pop_facts = self.df_pop_facts.append(df1,ignore_index= True)
@@ -282,9 +282,9 @@ class fact_table:
     self.df_immig_facts = self.df_immig_facts.append(df1,ignore_index= True)
     row = self.df_year.loc[self.df_year['unemp_perc'].idxmax()]
     data1 = {
-      'Fact': ['Highest Unemployment %',],
+      'Fact': ['Highest Unemployment (Percentage)',],
       'Category': [row['District.Name']],
-      'Count': [row['unemp_perc']]
+      'Count': str(row['unemp_perc'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_immig_facts = self.df_immig_facts.append(df1,ignore_index= True)
@@ -302,9 +302,9 @@ class fact_table:
 
     row = self.df_year.loc[self.df_year['unemp_perc'].idxmin()]
     data1 = {
-      'Fact': ['Least Unemployment %',],
+      'Fact': ['Least Unemployment (Percentage)',],
       'Category': [row['District.Name']],
-      'Count': [row['unemp_perc']]
+      'Count': str(row['unemp_perc'])+" %"
     }
     df1 = pd.DataFrame(data1)
     self.df_immig_facts = self.df_immig_facts.append(df1,ignore_index= True)
