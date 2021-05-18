@@ -84,6 +84,10 @@ elif select_category == "Yearly Data (Population)" or select_category == "Yearly
         min_value= int(2015), 
         max_value= int(df_population.Year.max()))
     selected_data = selected_dataframe[(selected_dataframe['Year'] == select_year)]
+elif select_category == "Key Trends":
+    st.sidebar.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h4 style='text-align: left; color: black;'>Tip: You can interact with each chart by hovering over the values and clicking the respective buttons on the top right corner of each figure. You can also interact with the legend by clicking and double clicking.</h4>", unsafe_allow_html=True)
+
 
 ####################################################################################    
 # if select_category != 'Immigrants (By Nationality)':
@@ -138,9 +142,6 @@ if select_category != "District Comparison" and select_category != 'Key Trends' 
     
     if select_category == 'Yearly Data (Population)' :
         with map2:
-            # st.markdown("<h4 style='text-align: center; color: black;'>Key Facts</h4>", unsafe_allow_html=True)
-            # # df_fact_table =df_fact_table.rename(columns={"Fact": "District", "Category": "Neighborhood"})
-            # st.table(x.get_pop_facts(select_year))
             st.markdown("<h4 style='text-align: center; color: black;'>Key Facts</h4>", unsafe_allow_html=True)
             pop_data_table = x.get_pop_facts(select_year) 
             pop_data_table =pop_data_table.rename(columns={"Count": "Citizens" })
@@ -425,38 +426,47 @@ if select_category == "District Comparison":
     all_dist = making_textbox.making_textbox()
 
     st.set_option('deprecation.showPyplotGlobalUse', False)
-    unemployGender = Compare('./archive/unemployment.csv')
-    unemployGender.makeDataframe(all_dist, select_year, 'Gender')
-    unemployGender.showFigure('Unemployment By Gender', col1, xlabel='District', ylabel='No of People')
-
-    st.set_option('deprecation.showPyplotGlobalUse', False)
     unemployDistrict = Compare('./archive/unemployment.csv')
     unemployDistrict.makeDataframe(all_dist, select_year, 'District.Name')
     unemployDistrict.showFigure('Unemployment By District Name', col2, graphBar='bar', xlabel='District', ylabel='No of People')
 
-    # populationAge = Compare('./archive/immigrants_emigrants_by_age.csv')
-    # populationAge.makeDataframe(all_dist, select_year, 'Age')
-    # populationAge.showFigure('Population By Age', colNext1, graphBar='barh')
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    unemployGender = Compare('./archive/unemployment.csv')
+    unemployGender.makeDataframe(all_dist, select_year, 'Gender')
+    unemployGender.showFigure('Unemployment By Gender', col2, xlabel='District', ylabel='No of People')
+
+
+
+    # col3.write("")
+  
+
+    deathsDistrict = Compare('./archive/deaths.csv')
+    deathsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
+    deathsDistrict.showFigure('Deaths By District Name', col3, graphBar='barh', xlabel='No of People', ylabel='District')
     
+    col3.write("")
+    col3.write("")
+    col3.write("")
     st.set_option('deprecation.showPyplotGlobalUse', False)
     populationNeighbor = Compare('./archive/population.csv')
     populationNeighbor.makeDataframe(all_dist, select_year, 'Gender')
     populationNeighbor.showFigure('Population By Gender',  col3, graphBar='barh', xlabel='No of People', ylabel='District')
-    
+
+    imigrantsDistrict = Compare('./archive/immigrants_by_nationality.csv')
+    imigrantsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
+    imigrantsDistrict.showFigure('Immigrants By District Name', col1, graphBar='barh', xlabel='No of People', ylabel='District')
+
+    # col1.write("")
+    col1.write("")
+    col1.write("")
     populationSex = Compare('./archive/immigrants_emigrants_by_sex.csv')
     populationSex.makeDataframe(all_dist, select_year, 'Gender')
     populationSex.showFigure('Immigrants By Gender', col1, graphBar='barh', xlabel='No of People', ylabel='District')
     
-    imigrantsDistrict = Compare('./archive/immigrants_by_nationality.csv')
-    imigrantsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
-    imigrantsDistrict.showFigure('Immigrants By District Name', col2, graphBar='barh', xlabel='No of People', ylabel='District')
-    
-    col3.write("")
-    col3.write("")
-    col3.write("")
-    col3.write("")
-    deathsDistrict = Compare('./archive/deaths.csv')
-    deathsDistrict.makeDataframe(all_dist, select_year, 'District.Name')
-    deathsDistrict.showFigure('Deaths By District Name', col3, graphBar='barh', xlabel='No of People', ylabel='District')
 
-st.sidebar.write("You can view each chart in more detail by hovering over their top right corner and clicking the respective buttons.")
+    
+
+
+
+
+# st.sidebar.write("You can view each chart in more detail by hovering over their top right corner and clicking the respective buttons.")

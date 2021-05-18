@@ -34,14 +34,20 @@ class Compare:
             df6 = newDF.T
             if graphBar == 'bar':      
                 df6.plot.bar(rot=15, title=titleShow, color=colors)
+                plt.rcParams["figure.figsize"] = (15,13)
+                plt.rcParams.update({'font.size': 20})
             elif graphBar == 'barh':
-                df6.plot.barh(rot=15, title=titleShow, color=colors)
+                df6.plot.barh(rot=45, title=titleShow, color=colors)
+                plt.rcParams["figure.figsize"] = (15,13)
+                plt.rcParams.update({'font.size': 20})
             elif graphBar == 'line':
                 df6.plot.line(rot=15, title=titleShow, color=colors)
+                plt.rcParams["figure.figsize"] = (15,13)
+                plt.rcParams.update({'font.size': 20})
             elif graphBar == 'hist':
                 df6.plot.hist(rot=15, title=titleShow, color=colors)
-            plt.rcParams["figure.figsize"] = (15,20)
-            plt.rcParams.update({'font.size': 30})
+                plt.rcParams["figure.figsize"] = (15,13)
+                plt.rcParams.update({'font.size': 20})
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
             plt.show(block=True)
